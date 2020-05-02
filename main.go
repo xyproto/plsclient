@@ -1,49 +1,68 @@
-package ioe
+package main
 
 import (
 	"bytes"
 	"errors"
-	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"sort"
-	"strconv"
 	"strings"
-	"time"
-	"unicode"
 )
 
-// WORK IKN PROGRESS DOES NOT COMPILE AND IS FULL OF TYPOS ASDFASDFASDFASDF
+type LanguageServer struct {
+	executable            string
+	inBuf, outBuf, errBuf bytes.Buffer
+	cmd                   *exec.Cmd
+	running               bool
+}
 
-func Run(cmd, input string) (string,  {
-	scdoc := exec.Command("scdoc")
+func (ls *LanguageServer) Input(s string) (string, error) {
+	if !ls.running {
+		ls.inBuf.WriteString(s + "\n")
+		if err := ls.cmd.Start(); err != nil {
+			return "", err
+		}
+		ls.running = true
+		if err := ls.cmd.Wait(); err != nil {
+			output := strings.TrimSpace(ls.outBuf.String() + ls.errBuf.String())
+			if output != "" {
+				return "", errors.New(output)
+			}
+			return "", err
+		}
+		return ls.outBuf.String() + ls.errBuf.String(), nil
+	} else {
+		ls.inBuf.WriteString(s + "\n")
+		if err := ls.cmd.Wait(); err != nil {
+			output := strings.TrimSpace(ls.outBuf.String() + ls.errBuf.String())
+			if output != "" {
+				return "", errors.New(output)
+			}
+			return "", err
+		}
+		return ls.outBuf.String() + ls.errBuf.String(), nil
+	}
+}
 
-	// Place the current contents in a buffer, and feed it to stdin to the command
-	var buf bytes.Buffer
-	buf.WriteString(e.String())
-	scdoc.Stdin = &buf
+func New() *LanguageServer {
+	var ls LanguageServer
+	ls.executable = "gopls"
+	ls.cmd = exec.Command(ls.executable)
+	ls.cmd.Stdin = &ls.inBuf
+	ls.cmd.Stdout = &ls.outBuf
+	ls.cmd.Stderr = &ls.errBuf
+	return &ls
+}
 
-	// Create a new file and use it as stdout
-	manpageFile, err := os.Create("out.1")
+func main() {
+	ls := New()
+	output, err := ls.Input("HELLO")
 	if err != nil {
-		return "", err
+		if output != "" {
+			fmt.Printf("output: %s\n", output)
+		}
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		return
 	}
-	scdoc.Stdout = manpageFile
-
-	var errBuf bytes.Buffer
-	scdoc.Stderr = &errBuf
-
-	// Run scdoc
-	if err := scdoc.Run(); err != nil {
-		statusMessage = strings.TrimSpace(errBuf.String())
-		status.ClearAll(c)
-		status.SetMessage(statusMessage)
-		status.Show(c, e)
-		break // from case
-	}
-
-	return "", 
+	fmt.Println("OUT:\n" + output)
 }
