@@ -1,3 +1,5 @@
 # ioe
 
-I/O Execute, the beginnings of a language server client
+Work in progress!
+
+The beginnings of a language server client
