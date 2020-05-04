@@ -1,11 +1,10 @@
-package main
+package prettypls
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -20,6 +19,9 @@ type LanguageServer struct {
 	tmpOut, tmpErr        io.Writer
 }
 
+var errClosed = errors.New("the connection to the language server has been closed")
+
+// New creates a new gopls wrapper
 func New() *LanguageServer {
 	var ls LanguageServer
 	ls.executable = "gopls"
@@ -36,6 +38,9 @@ func New() *LanguageServer {
 // Input will send a string directly to the language server (and start it if needed).
 // No headers are added. The resulting stdout and stderr are returned as a string.
 func (ls *LanguageServer) Input(s string) (string, error) {
+	if ls.cmd == nil {
+		return "", errClosed
+	}
 	if !ls.running {
 		ls.bufIn.WriteString(s + "\r")
 		if err := ls.cmd.Start(); err != nil {
@@ -80,66 +85,13 @@ func (ls *LanguageServer) Request(msg string, verbose bool) (string, error) {
 
 // Close will close the in/out/err buffers and wait for the process to complete
 func (ls *LanguageServer) Close() error {
-	if ls.cmd != nil {
-		ls.cmd.Stdin = ls.tmpIn
-		ls.cmd.Stdout = ls.tmpOut
-		ls.cmd.Stderr = ls.tmpErr
-		ls.cmd.Wait()
-		ls.cmd = nil
-		return nil
+	if ls.cmd == nil {
+		return errClosed
 	}
-	return errors.New("No running process")
-}
-
-func main() {
-	ls := New()
-	defer ls.Close()
-
-	output, err := ls.Request(`{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "textDocument/didOpen",
-  "params": {}
-}`, true)
-	if err != nil {
-		if output != "" {
-			fmt.Printf("output: %s\n", output)
-		}
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
-		// return
-	}
-	fmt.Println("OUT:\n" + output)
-
-	output, err = ls.Request(`{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "textDocument/didOpen",
-  "params": {}
-}`, true)
-	if err != nil {
-		if output != "" {
-			fmt.Printf("output: %s\n", output)
-		}
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
-		// return
-	}
-	fmt.Println("OUT:\n" + output)
-
-	ls.Close()
-
-	output, err = ls.Request(`{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "textDocument/didOpen",
-  "params": {}
-}`, true)
-	if err != nil {
-		if output != "" {
-			fmt.Printf("output: %s\n", output)
-		}
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
-		// return
-	}
-	fmt.Println("OUT:\n" + output)
-
+	ls.cmd.Stdin = ls.tmpIn
+	ls.cmd.Stdout = ls.tmpOut
+	ls.cmd.Stderr = ls.tmpErr
+	ls.cmd.Wait()
+	ls.cmd = nil
+	return nil
 }
