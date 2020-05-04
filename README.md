@@ -1,5 +1,5 @@
 # prettypls
 
-A client for `gopls` (pronounced "go please"). `prettypls` is pronounced "pretty please".
+A client for `gopls`.
 
-A work in progress!
+A work in progress! Does not work yet.
