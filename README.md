@@ -1,5 +1,5 @@
-# ioe
+# prettypls
 
-Work in progress!
+A client for `gopls` (pronounced "go please"). `prettypls` is pronounced "pretty please".
 
-The beginnings of a language server client
+A work in progress!
