@@ -12,9 +12,9 @@ func main() {
 
 	output, err := ls.Request(`{
   "jsonrpc": "2.0",
-  "id": 1,
-  "method": "textDocument/didOpen",
-  "params": {}
+  "method": "substract",
+  "params": [42, 23],
+  "id": 1
 }`, true)
 	if err != nil {
 		if output != "" {
@@ -23,39 +23,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		// return
 	}
-	fmt.Println("OUT:\n" + output)
-	//ls.Close()
-
-	output, err = ls.Request(`{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "textDocument/didOpen",
-  "params": {}
-}`, true)
-	if err != nil {
-		if output != "" {
-			fmt.Printf("output: %s\n", output)
-		}
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
-		// return
-	}
-	fmt.Println("OUT:\n" + output)
-	//ls.Close()
-
-	output, err = ls.Request(`{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "textDocument/didOpen",
-  "params": {}
-}`, true)
-	if err != nil {
-		if output != "" {
-			fmt.Printf("output: %s\n", output)
-		}
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
-		// return
-	}
-	fmt.Println("OUT:\n" + output)
-
 	ls.Close()
+	fmt.Println("OUT:\n" + output)
 }
