@@ -1,4 +1,4 @@
-# prettypls
+# plsclient
 
 A client for `gopls`.
 
